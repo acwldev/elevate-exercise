@@ -20,22 +20,21 @@ INCIDENT_TYPES = [
     'other'
 ]
 
-def handle(event, context):
+def handler(event, context):
     secret_credentials_arn = os.getenv('CREDENTIALS_ARN')
     s3_cache_bucketname = os.getenv('DATA_BUCKET')
-    create_report(secret_credentials_arn)
+    report = create_report(secret_credentials_arn)
     data_uploader.upload_report(s3_cache_bucketname, report)
 
 def create_report(secret_credentials_arn):
     secrets = boto3.client('secretsmanager')
-    credentials = secrets.get_secret_value(SecretId=secretCredentialsArn)['SecretString'].split(',')
+    credentials = secrets.get_secret_value(SecretId=secret_credentials_arn)['SecretString'].split(',')
     username = credentials[0]
     password = credentials[1]
-    identity_mapping = data_puller.get_identity_mapping(IDENTITIES_FQDN, username, passworD)
+    identity_mapping = data_puller.get_identity_mapping(IDENTITIES_FQDN, username, password)
     all_transformed_data = {}
     for incident_type in INCIDENT_TYPES:
         destination_url = INCIDENTS_FQDN + incident_type
         raw_data = data_puller.get_audit_data(destination_url, username, password)
-        all_transformed_data[incident_type] = data_reporter.transform_raw_Data(raw_data, identity_mapping)
-    report = data_transformer.aggreagate_data(all_transformed_data)
-def
+        all_transformed_data[incident_type] = data_transformer.transform_raw_data(raw_data, incident_type, identity_mapping)
+    return data_transformer.aggreagate_data(all_transformed_data)

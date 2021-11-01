@@ -4,9 +4,6 @@ import urllib.parse
 import urllib.request
 import urllib.response
 
-def get_cached_report(bucket_name):
-    pass
-
 def get_identity_mapping(destination_url, username, password):
     return get_data(destination_url, username, password)
 
@@ -21,7 +18,7 @@ def get_data(destination_url, username, password):
     urllib.request.install_opener(opener)
     try:
         result = opener.open(destination_url)
-        return json.loads(messages)
+        return json.loads(result.read())
     except IOError as e:
-        return P{}
         print (e)
+        return {}

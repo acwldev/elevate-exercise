@@ -8,5 +8,5 @@ def handler(event, context):
         'headers': {
             'Content-Type': 'text/plain'
         },
-        'body': data_daemon.handler(event context)
+        'body': data_daemon.handler(event, context)
     }
