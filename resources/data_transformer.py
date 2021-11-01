@@ -10,19 +10,35 @@ SOURCE_IP_KEY = 'source_ip'
 INTERNAL_IP_KEY = 'internal_ip'
 MACHINE_IP_KEY = 'machine_ip'
 TIMESTAMP_KEY = 'timestamp'
-UNKNOWN_ENTITY = "unknown_entity"
+ID_KEY = "id"
+IP_KEY = "ip"
+UNKNOWN_ENTITY = "unknown"
 
-def get_offending_entity(entry):
-    return entry.get(MACHINE_IP_KEY) or entry.get(INTERNAL_IP_KEY) or entry.get(SOURCE_IP_KEY)
+IP_TYPES = [ MACHINE_IP_KEY, INTERNAL_IP_KEY, SOURCE_IP_KEY]
+
+# In some cases, audit entries can have multiple and different ip parameters
+# We will try to resolve them to someone in the identity mapping
+# If we fail to resolve, then dump it under an "unknown" entity
+def get_offending_entity(entry, identity_mapping):
+    entity_ip = UNKNOWN_ENTITY
+    entity_id = UNKNOWN_ENTITY
+    for ip_type in IP_TYPES:
+        if entry.get(ip_type):
+            entity_ip = entry.get(ip_type)
+            entity_id = identity_mapping.get(entity_ip)
+        if entity_id and entity_id != UNKNOWN_ENTITY:
+            break
+    return { id: entity_id, ip: entity_ip }
 
 def transform_raw_data(raw_data, incident_type, identity_mapping):
     output = {}
     for entry in raw_data:
-        offending_entity = get_offending_entity(entry)
-        id = str(identity_mapping.get(offending_entity, UNKNOWN_ENTITY))
+        offending_entity = get_offending_entity(entry, identity_mapping)
+        id = offending_entity[ID_KEY]
+        ip = offending_entity[IP_KEY]
         if not (id in output):
             output[id] = AuditProfile(id)
-        output[id].add_incident(incident_type, entry[PRIORITY_KEY], offending_entity, entry[TIMESTAMP_KEY])
+        output[id].add_incident(incident_type, entry[PRIORITY_KEY], ip, entry[TIMESTAMP_KEY])
     return output
 
 def aggreagate_data(transformed_data):
