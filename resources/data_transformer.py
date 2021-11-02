@@ -47,8 +47,8 @@ def transform_raw_data(raw_data, incident_type, identity_mapping):
         if not (id in output):
             output[id] = AuditProfile(id)
         new_entry = entry.copy()
-        new_entry[TYPE_KEY] = type
-        output[id].add_incident(entry)
+        new_entry[TYPE_KEY] = incident_type
+        output[id].add_incident(new_entry)
     return output
 
 
@@ -113,7 +113,7 @@ class AuditProfile:
         incidents = self.get_incidents(priority)
         if len(incidents) > 0:
             self.data[priority][COUNT_KEY] = len(incidents) - 1
-            return incidents.pop()
+            return incidents.pop(0)
 
     # Transfers all incidents in the input AuditProfile to this AuditProfile in the order of ascending time
     def transfer_incidents(self, profiles):
