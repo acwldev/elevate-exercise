@@ -1,7 +1,7 @@
 import boto3
 import data_puller
 import data_transformer
-import data_uploader
+import s3_dao
 import json
 import os
 import urllib.parse
@@ -26,7 +26,7 @@ def handler(event, context):
     s3_cache_file_name = os.getenv('CACHE_FILE_NAME')
 
     report = create_report(secret_credentials_arn)
-    data_uploader.upload_report(s3_cache_bucket_name, s3_cache_file_name, str(report))
+    s3_dao.upload_report(s3_cache_bucket_name, s3_cache_file_name, str(report))
 
 def create_report(secret_credentials_arn):
     secrets = boto3.client('secretsmanager')
