@@ -34,9 +34,12 @@ def create_report(secret_credentials_arn):
     username = credentials[0]
     password = credentials[1]
     identity_mapping = data_puller.get_identity_mapping(IDENTITIES_FQDN, username, password)
-    all_transformed_data = {}
+    audit_profiles_by_type_and_id = {}
+    all_ids = set()
     for incident_type in INCIDENT_TYPES:
         destination_url = INCIDENTS_FQDN + incident_type
         raw_data = data_puller.get_audit_data(destination_url, username, password)
-        all_transformed_data[incident_type] = data_transformer.transform_raw_data(raw_data, incident_type, identity_mapping)
-    return data_transformer.aggreagate_data(all_transformed_data)
+        audit_profiles_by_id = data_transformer.transform_raw_data(raw_data, incident_type, identity_mapping)
+        all_ids.update(audit_profiles_by_id.keys())
+        audit_profiles_by_type_and_id[incident_type] = audit_profiles_by_id
+    return data_transformer.aggregate_data(all_ids, audit_profiles_by_type_and_id)
