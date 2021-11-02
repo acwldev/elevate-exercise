@@ -3,25 +3,28 @@
 import * as core from "@aws-cdk/core";
 import * as apigateway from "@aws-cdk/aws-apigateway";
 import * as lambda from "@aws-cdk/aws-lambda";
+import * as s3 from "@aws-cdk/aws-s3";
 import * as secretsManager from "@aws-cdk/aws-secretsmanager";
-import { IncidentDataStore, IncidentDataStoreProps } from '../lib/incident_data_store';
 
 const IncidentBucketRootName = "incidents"
+const CACHE_FILE_NAME = "audit_report"
 
 export class AuditService extends core.Construct {
   constructor(scope: core.Construct, id: string) {
     super(scope, id);
 
-    const dataStore = new IncidentDataStore(this, 'IncidentS3DataStore', { bucketRootName: IncidentBucketRootName});
+    const bucket = new s3.Bucket(this, IncidentBucketRootName);
     const elevateCredentials = new secretsManager.Secret(this, 'ElevateSecretCredentials');
 
     const handler = new lambda.Function(this, 'requestHandler', {
       handler: 'activity.handler',
       runtime: lambda.Runtime.PYTHON_3_8,
       code: lambda.Code.fromAsset('resources'),
+      timeout: core.Duration.seconds(10),
       environment: {
-        "DATA_BUCKET": dataStore.getBucketName(),
-        "CREDENTIALS_ARN": elevateCredentials.secretArn
+        "DATA_BUCKET": bucket.bucketName,
+        "CREDENTIALS_ARN": elevateCredentials.secretArn,
+        "CACHE_FILE_NAME": CACHE_FILE_NAME
       },
     });
 
@@ -38,5 +41,7 @@ export class AuditService extends core.Construct {
 
     // Give permission to lambda to read credentials stored in Secret Manager
     elevateCredentials.grantRead(handler.role!);
+    bucket.grantRead(handler.role!);
+    bucket.grantWrite(handler.role!);
   }
 }

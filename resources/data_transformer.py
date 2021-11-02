@@ -28,7 +28,7 @@ def get_offending_entity(entry, identity_mapping):
             entity_id = identity_mapping.get(entity_ip)
         if entity_id and entity_id != UNKNOWN_ENTITY:
             break
-    return { id: entity_id, ip: entity_ip }
+    return { ID_KEY: entity_id, IP_KEY: entity_ip }
 
 def transform_raw_data(raw_data, incident_type, identity_mapping):
     output = {}

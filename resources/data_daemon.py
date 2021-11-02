@@ -22,9 +22,11 @@ INCIDENT_TYPES = [
 
 def handler(event, context):
     secret_credentials_arn = os.getenv('CREDENTIALS_ARN')
-    s3_cache_bucketname = os.getenv('DATA_BUCKET')
+    s3_cache_bucket_name = os.getenv('DATA_BUCKET')
+    s3_cache_file_name = os.getenv('CACHE_FILE_NAME')
+
     report = create_report(secret_credentials_arn)
-    data_uploader.upload_report(s3_cache_bucketname, report)
+    data_uploader.upload_report(s3_cache_bucket_name, s3_cache_file_name, str(report))
 
 def create_report(secret_credentials_arn):
     secrets = boto3.client('secretsmanager')
